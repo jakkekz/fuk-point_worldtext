@@ -1,8 +1,11 @@
 // Get all DOM elements
 const shaderTypeSelect = document.getElementById('shader-type');
 const contentTypeRadios = document.querySelectorAll('input[name="content-type"]');
+const fontTypeRadios = document.querySelectorAll('input[name="font-type"]');
 const textInputSection = document.getElementById('text-input-section');
 const ljNumbersSection = document.getElementById('lj-numbers-section');
+const standardFontSection = document.getElementById('standard-font-section');
+const customFontSection = document.getElementById('custom-font-section');
 const textInput = document.getElementById('text-input');
 const minNumberInput = document.getElementById('min-number');
 const maxNumberInput = document.getElementById('max-number');
@@ -12,9 +15,14 @@ const fontSelect = document.getElementById('font-select');
 const fontSizeSlider = document.getElementById('font-size-slider');
 const fontSizeValue = document.getElementById('font-size-value');
 const resolutionSelect = document.getElementById('resolution');
-const folderNameInput = document.getElementById('folder-name');
 const previewCanvas = document.getElementById('preview-canvas');
 const generateBtn = document.getElementById('generate-btn');
+const addToQueueBtn = document.getElementById('add-to-queue-btn');
+const clearQueueBtn = document.getElementById('clear-queue-btn');
+const downloadQueueBtn = document.getElementById('download-queue-btn');
+const queueSection = document.getElementById('queue-section');
+const queueList = document.getElementById('queue-list');
+const queueCount = document.getElementById('queue-count');
 const progressSection = document.getElementById('progress-section');
 const progressFill = document.getElementById('progress-fill');
 const statusText = document.getElementById('status-text');
@@ -24,9 +32,16 @@ const uploadedFontsDiv = document.getElementById('uploaded-fonts');
 // Store uploaded fonts
 const uploadedFonts = new Map(); // fontName -> { fontFace, file }
 
+// Store queue items
+const queue = [];
+
 // Event listeners
 contentTypeRadios.forEach(radio => {
     radio.addEventListener('change', updateContentTypeVisibility);
+});
+
+fontTypeRadios.forEach(radio => {
+    radio.addEventListener('change', updateFontTypeVisibility);
 });
 
 textInput.addEventListener('input', updatePreview);
@@ -40,9 +55,13 @@ fontSizeSlider.addEventListener('input', () => {
 });
 fontUploadInput.addEventListener('change', handleFontUpload);
 generateBtn.addEventListener('click', generateAndDownload);
+addToQueueBtn.addEventListener('click', addToQueue);
+clearQueueBtn.addEventListener('click', clearQueue);
+downloadQueueBtn.addEventListener('click', downloadQueue);
 
 // Initialize
 updateContentTypeVisibility();
+updateFontTypeVisibility();
 updatePreview();
 
 function updateContentTypeVisibility() {
@@ -54,6 +73,20 @@ function updateContentTypeVisibility() {
     } else {
         textInputSection.style.display = 'none';
         ljNumbersSection.style.display = 'block';
+    }
+    
+    updatePreview();
+}
+
+function updateFontTypeVisibility() {
+    const selectedType = document.querySelector('input[name="font-type"]:checked').value;
+    
+    if (selectedType === 'standard') {
+        standardFontSection.style.display = 'block';
+        customFontSection.style.display = 'none';
+    } else {
+        standardFontSection.style.display = 'none';
+        customFontSection.style.display = 'block';
     }
     
     updatePreview();
@@ -294,6 +327,275 @@ async function generateAndDownload() {
     }
 }
 
+function addToQueue() {
+    // Validate inputs
+    const contentType = document.querySelector('input[name="content-type"]:checked').value;
+    
+    if (contentType === 'text' && !textInput.value.trim()) {
+        alert('Please enter text to generate.');
+        return;
+    }
+    
+    if (contentType === 'lj-numbers') {
+        const min = parseInt(minNumberInput.value);
+        const max = parseInt(maxNumberInput.value);
+        
+        if (min >= max) {
+            alert('Maximum number must be greater than minimum number.');
+            return;
+        }
+    }
+    
+    // Create queue item
+    const queueItem = {
+        id: Date.now(),
+        contentType,
+        text: contentType === 'text' ? textInput.value : null,
+        minNumber: contentType === 'lj-numbers' ? parseInt(minNumberInput.value) : null,
+        maxNumber: contentType === 'lj-numbers' ? parseInt(maxNumberInput.value) : null,
+        increment: contentType === 'lj-numbers' ? parseInt(incrementInput.value) : null,
+        shaderType: shaderTypeSelect.value,
+        resolution: parseInt(resolutionSelect.value),
+        fontFamily: fontSelect.value,
+        alignment: alignmentSelect.value,
+        fontSizeScale: parseInt(fontSizeSlider.value),
+        folderName: 'fuckpointworldtext'
+    };
+    
+    queue.push(queueItem);
+    updateQueueDisplay();
+}
+
+function clearQueue() {
+    queue.length = 0;
+    updateQueueDisplay();
+}
+
+function removeFromQueue(id) {
+    const index = queue.findIndex(item => item.id === id);
+    if (index !== -1) {
+        queue.splice(index, 1);
+        updateQueueDisplay();
+    }
+}
+
+function updateQueueDisplay() {
+    if (queue.length === 0) {
+        queueSection.style.display = 'none';
+        return;
+    }
+    
+    queueSection.style.display = 'block';
+    queueCount.textContent = queue.length;
+    
+    queueList.innerHTML = '';
+    queue.forEach(item => {
+        const queueItemEl = document.createElement('div');
+        queueItemEl.className = 'queue-item';
+        
+        let displayText;
+        if (item.contentType === 'text') {
+            displayText = item.text.length > 30 ? item.text.substring(0, 30) + '...' : item.text;
+        } else {
+            const count = Math.floor((item.maxNumber - item.minNumber) / item.increment) + 1;
+            displayText = `LJ ${item.minNumber}-${item.maxNumber} (${count} items)`;
+        }
+        
+        queueItemEl.innerHTML = `
+            <span class="queue-item-text">${displayText}</span>
+            <button class="queue-item-remove" onclick="removeFromQueue(${item.id})">×</button>
+        `;
+        
+        queueList.appendChild(queueItemEl);
+    });
+}
+
+async function downloadQueue() {
+    if (queue.length === 0) {
+        alert('Queue is empty. Add items first.');
+        return;
+    }
+    
+    // Disable buttons and show progress
+    downloadQueueBtn.disabled = true;
+    addToQueueBtn.disabled = true;
+    progressSection.style.display = 'block';
+    progressFill.style.width = '0%';
+    statusText.textContent = 'Preparing...';
+    
+    try {
+        await generateQueueFiles();
+        statusText.textContent = 'Download complete!';
+        clearQueue();
+        setTimeout(() => {
+            progressSection.style.display = 'none';
+        }, 2000);
+    } catch (error) {
+        alert(`Error: ${error.message}`);
+        statusText.textContent = 'Error occurred';
+    } finally {
+        downloadQueueBtn.disabled = false;
+        addToQueueBtn.disabled = false;
+    }
+}
+
+async function generateQueueFiles() {
+    const zip = new JSZip();
+    
+    // Calculate total items
+    let totalItems = 0;
+    for (const queueItem of queue) {
+        if (queueItem.contentType === 'text') {
+            totalItems += 1;
+        } else {
+            totalItems += Math.floor((queueItem.maxNumber - queueItem.minNumber) / queueItem.increment) + 1;
+        }
+    }
+    
+    let processedItems = 0;
+    
+    // Process each queue item
+    for (const queueItem of queue) {
+        const materialsFolder = zip.folder(`materials/${queueItem.folderName}`);
+        
+        let textsToGenerate = [];
+        if (queueItem.contentType === 'text') {
+            textsToGenerate = [queueItem.text];
+        } else {
+            for (let i = queueItem.minNumber; i <= queueItem.maxNumber; i += queueItem.increment) {
+                textsToGenerate.push(i.toString());
+            }
+        }
+        
+        // Generate each text
+        for (const text of textsToGenerate) {
+            const filename = sanitizeFilename(text);
+            
+            // Update progress
+            processedItems++;
+            const progress = (processedItems / totalItems) * 100;
+            progressFill.style.width = `${progress}%`;
+            statusText.textContent = `Generating ${processedItems}/${totalItems}: ${filename}`;
+            
+            // Generate image
+            const imageBlob = await generateTextImageFromQueue(text, queueItem);
+            materialsFolder.file(`${filename}.png`, imageBlob);
+            
+            // Generate .vmat file
+            const vmatContent = generateVmatContent(
+                queueItem.shaderType,
+                `materials/${queueItem.folderName}/${filename}.png`
+            );
+            materialsFolder.file(`${filename}.vmat`, vmatContent);
+            
+            // Small delay to allow UI to update
+            await new Promise(resolve => setTimeout(resolve, 10));
+        }
+    }
+    
+    // Generate ZIP and download
+    statusText.textContent = 'Creating ZIP file...';
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    
+    // Download
+    const url = URL.createObjectURL(zipBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `materials_batch.zip`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function generateTextImageFromQueue(text, queueItem) {
+    return new Promise((resolve) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = queueItem.resolution;
+        canvas.height = queueItem.resolution;
+        const ctx = canvas.getContext('2d');
+        
+        // Clear with black background
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, queueItem.resolution, queueItem.resolution);
+        
+        // Split text into lines
+        const lines = text.split('\n');
+        const fontSizeScale = queueItem.fontSizeScale / 100;
+        
+        // Calculate base font size based on resolution and number of lines
+        const lineCount = lines.length;
+        let baseFontSize = queueItem.resolution / 4;
+        
+        // Adjust base size for multiple lines to prevent excessive shrinking
+        if (lineCount > 1) {
+            baseFontSize = Math.min(queueItem.resolution / 4, queueItem.resolution / (lineCount * 0.8));
+        }
+        
+        // First, calculate what the fitted font size would be at 100%
+        let fittedFontSize = baseFontSize;
+        ctx.font = `bold ${fittedFontSize}px "${queueItem.fontFamily}"`;
+        
+        // Measure and adjust to fit
+        let maxWidth = 0;
+        for (const line of lines) {
+            const metrics = ctx.measureText(line);
+            if (metrics.width > maxWidth) maxWidth = metrics.width;
+        }
+        
+        let lineHeight = fittedFontSize * 1.2;
+        let totalHeight = lineHeight * lines.length;
+        
+        while ((maxWidth > queueItem.resolution * 0.9 || totalHeight > queueItem.resolution * 0.9) && fittedFontSize > 10) {
+            fittedFontSize -= 5;
+            ctx.font = `bold ${fittedFontSize}px "${queueItem.fontFamily}"`;
+            maxWidth = 0;
+            for (const line of lines) {
+                const metrics = ctx.measureText(line);
+                if (metrics.width > maxWidth) maxWidth = metrics.width;
+            }
+            lineHeight = fittedFontSize * 1.2;
+            totalHeight = lineHeight * lines.length;
+        }
+        
+        // Now apply the scale to the fitted size
+        const fontSize = fittedFontSize * fontSizeScale;
+        ctx.font = `bold ${fontSize}px "${queueItem.fontFamily}"`;
+        lineHeight = fontSize * 1.2;
+        
+        // Set text properties
+        ctx.fillStyle = '#FFFFFF';
+        ctx.textBaseline = 'middle';
+        
+        // Set alignment
+        let x;
+        if (queueItem.alignment === 'left') {
+            ctx.textAlign = 'left';
+            x = queueItem.resolution * 0.05;
+        } else if (queueItem.alignment === 'right') {
+            ctx.textAlign = 'right';
+            x = queueItem.resolution * 0.95;
+        } else {
+            ctx.textAlign = 'center';
+            x = queueItem.resolution / 2;
+        }
+        
+        // Draw each line
+        const totalTextHeight = lineHeight * lines.length;
+        let y = (queueItem.resolution - totalTextHeight) / 2 + lineHeight / 2;
+        
+        for (const line of lines) {
+            ctx.fillText(line, x, y);
+            y += lineHeight;
+        }
+        
+        // Convert to blob
+        canvas.toBlob((blob) => {
+            resolve(blob);
+        }, 'image/png');
+    });
+}
+
 async function generateFiles() {
     const zip = new JSZip();
     const contentType = document.querySelector('input[name="content-type"]:checked').value;
@@ -301,7 +603,7 @@ async function generateFiles() {
     const resolution = parseInt(resolutionSelect.value);
     const fontFamily = fontSelect.value;
     const alignment = alignmentSelect.value;
-    const folderName = folderNameInput.value.trim() || 'fuckpointworldtext';
+    const folderName = 'fuckpointworldtext';
     
     // Get list of texts to generate
     let textsToGenerate = [];

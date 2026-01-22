@@ -46,7 +46,7 @@
                     <div class="step-number">4</div>
                     <div class="step-text">
                         <strong>Install in CS2</strong>
-                        <p>Extract to:<br><code>content/csgo_addons/[your_addon]/materials</code></p>
+                        <p>Extract .vmat and .png to:<br><code>content/csgo_addons/[your_addon]<br>/materials/fuckpointworldtext</code></p>
                     </div>
                 </div>
                 <div class="step">
@@ -63,14 +63,6 @@
         <div class="form-panel">
             <h2>Settings</h2>
             <div class="form-content">
-
-        <div class="form-section">
-            <label for="shader-type">Shader Type:</label>
-            <select id="shader-type">
-                <option value="static">Csgo Static Overlay</option>
-                <option value="complex">Csgo Complex</option>
-            </select>
-        </div>
 
         <div class="form-section">
             <label>Content Type:</label>
@@ -103,29 +95,20 @@
         </div>
 
         <div class="form-section">
-            <label for="alignment">Alignment:</label>
-            <select id="alignment">
-                <option value="left">Left</option>
-                <option value="center" selected>Center</option>
-                <option value="right">Right</option>
-            </select>
-        </div>
-
-        <div class="form-section">
-            <label for="font-size-slider">Font Size: <span id="font-size-value">100</span>%</label>
-            <input type="range" id="font-size-slider" min="0" max="200" value="100" step="5">
-        </div>
-
-        <div class="form-section">
-            <label for="font-upload">Upload Custom Font (optional):</label>
-            <div class="upload-section">
-                <input type="file" id="font-upload" accept=".ttf,.otf,.woff,.woff2" multiple>
-                <small>Supports .ttf, .otf, .woff, .woff2 files</small>
+            <label>Font Type:</label>
+            <div class="radio-group">
+                <label class="radio-label">
+                    <input type="radio" name="font-type" value="standard" checked>
+                    Standard Font
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="font-type" value="custom">
+                    Custom Font
+                </label>
             </div>
-            <div id="uploaded-fonts" class="uploaded-fonts"></div>
         </div>
 
-        <div class="form-section">
+        <div id="standard-font-section" class="form-section">
             <label for="font-select">Font:</label>
             <select id="font-select">
                 <option value="Arial" selected>Arial</option>
@@ -146,6 +129,29 @@
             </select>
         </div>
 
+        <div id="custom-font-section" class="form-section" style="display: none;">
+            <label for="font-upload">Upload Custom Font:</label>
+            <div class="upload-section">
+                <input type="file" id="font-upload" accept=".ttf,.otf,.woff,.woff2" multiple>
+                <small>Supports .ttf, .otf, .woff, .woff2 files</small>
+            </div>
+            <div id="uploaded-fonts" class="uploaded-fonts"></div>
+        </div>
+
+        <div class="form-section">
+            <label for="font-size-slider">Font Size: <span id="font-size-value">100</span>%</label>
+            <input type="range" id="font-size-slider" min="0" max="300" value="100" step="5">
+        </div>
+
+        <div class="form-section">
+            <label for="alignment">Alignment:</label>
+            <select id="alignment">
+                <option value="left">Left</option>
+                <option value="center" selected>Center</option>
+                <option value="right">Right</option>
+            </select>
+        </div>
+
         <div class="form-section">
             <label for="resolution">Resolution:</label>
             <select id="resolution">
@@ -154,6 +160,14 @@
                 <option value="1024">1024x1024</option>
                 <option value="2048">2048x2048</option>
                 <option value="4096">4096x4096</option>
+            </select>
+        </div>
+
+        <div class="form-section">
+            <label for="shader-type">Shader Type:</label>
+            <select id="shader-type">
+                <option value="static">Csgo Static Overlay</option>
+                <option value="complex">Csgo Complex</option>
             </select>
         </div>
             </div>
@@ -169,14 +183,18 @@
                 </div>
             </div>
 
-            <div class="form-section">
-                <label for="folder-name">Output Folder Name:</label>
-                <input type="text" id="folder-name" value="fuckpointworldtext" placeholder="Folder name in materials/">
-                <small>Files shall be placed in materials/[folder name]/</small>
+            <div class="button-group">
+                <button id="add-to-queue-btn" class="btn-secondary">Queue</button>
+                <button id="generate-btn" class="btn-primary">Generate & Download Now</button>
             </div>
 
-            <div class="button-group">
-                <button id="generate-btn" class="btn-primary">Generate & Download</button>
+            <div class="form-section" id="queue-section" style="display: none;">
+                <label>Queue (<span id="queue-count">0</span> items):</label>
+                <div id="queue-list" class="queue-list"></div>
+                <div class="button-group">
+                    <button id="clear-queue-btn" class="btn-danger">Clear Queue</button>
+                    <button id="download-queue-btn" class="btn-success">Download All</button>
+                </div>
             </div>
 
             <div id="progress-section" style="display: none;">
