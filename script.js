@@ -9,6 +9,8 @@ const maxNumberInput = document.getElementById('max-number');
 const incrementInput = document.getElementById('increment');
 const alignmentSelect = document.getElementById('alignment');
 const fontSelect = document.getElementById('font-select');
+const fontSizeSlider = document.getElementById('font-size-slider');
+const fontSizeValue = document.getElementById('font-size-value');
 const resolutionSelect = document.getElementById('resolution');
 const folderNameInput = document.getElementById('folder-name');
 const previewCanvas = document.getElementById('preview-canvas');
@@ -28,8 +30,14 @@ contentTypeRadios.forEach(radio => {
 });
 
 textInput.addEventListener('input', updatePreview);
+minNumberInput.addEventListener('input', updatePreview);
+maxNumberInput.addEventListener('input', updatePreview);
 alignmentSelect.addEventListener('change', updatePreview);
 fontSelect.addEventListener('change', updatePreview);
+fontSizeSlider.addEventListener('input', () => {
+    fontSizeValue.textContent = fontSizeSlider.value;
+    updatePreview();
+});
 fontUploadInput.addEventListener('change', handleFontUpload);
 generateBtn.addEventListener('click', generateAndDownload);
 
@@ -157,10 +165,19 @@ function updatePreview() {
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, size, size);
     
-    // Get text
-    let text = textInput.value;
-    if (!text.trim()) {
-        text = 'Sample';
+    // Get text based on content type
+    const contentType = document.querySelector('input[name="content-type"]:checked').value;
+    let text;
+    
+    if (contentType === 'lj-numbers') {
+        // Show the minimum number as preview
+        const minNum = parseInt(minNumberInput.value) || 0;
+        text = minNum.toString();
+    } else {
+        text = textInput.value;
+        if (!text.trim()) {
+            text = 'Sample';
+        }
     }
     
     // Split text into lines
@@ -169,28 +186,47 @@ function updatePreview() {
     // Get font and alignment
     const fontFamily = fontSelect.value;
     const alignment = alignmentSelect.value;
+    const fontSizeScale = parseInt(fontSizeSlider.value) / 100;
     
-    // Calculate font size
-    let fontSize = size / 4;
-    ctx.font = `bold ${fontSize}px "${fontFamily}"`;
+    // Calculate base font size based on canvas size and number of lines
+    const lineCount = lines.length;
+    let baseFontSize = size / 4;
     
-    // Measure and adjust font size to fit all lines
+    // Adjust base size for multiple lines to prevent excessive shrinking
+    if (lineCount > 1) {
+        baseFontSize = Math.min(size / 4, size / (lineCount * 0.8));
+    }
+    
+    // First, calculate what the fitted font size would be at 100%
+    let fittedFontSize = baseFontSize;
+    ctx.font = `bold ${fittedFontSize}px "${fontFamily}"`;
+    
+    // Measure and adjust to fit
     let maxWidth = 0;
     for (const line of lines) {
         const metrics = ctx.measureText(line);
         if (metrics.width > maxWidth) maxWidth = metrics.width;
     }
     
-    const totalHeight = fontSize * lines.length * 1.2;
-    while ((maxWidth > size * 0.9 || totalHeight > size * 0.9) && fontSize > 10) {
-        fontSize -= 2;
-        ctx.font = `bold ${fontSize}px "${fontFamily}"`;
+    let lineHeight = fittedFontSize * 1.2;
+    let totalHeight = lineHeight * lines.length;
+    
+    while ((maxWidth > size * 0.9 || totalHeight > size * 0.9) && fittedFontSize > 10) {
+        fittedFontSize -= 2;
+        ctx.font = `bold ${fittedFontSize}px "${fontFamily}"`;
         maxWidth = 0;
         for (const line of lines) {
             const metrics = ctx.measureText(line);
             if (metrics.width > maxWidth) maxWidth = metrics.width;
         }
+        lineHeight = fittedFontSize * 1.2;
+        totalHeight = lineHeight * lines.length;
     }
+    
+    // Now apply the scale to the fitted size
+    const fontSize = fittedFontSize * fontSizeScale;
+    ctx.font = `bold ${fontSize}px "${fontFamily}"`;
+    lineHeight = fontSize * 1.2;
     
     // Set text properties
     ctx.fillStyle = '#FFFFFF';
@@ -210,7 +246,6 @@ function updatePreview() {
     }
     
     // Draw each line
-    const lineHeight = fontSize * 1.2;
     const totalTextHeight = lineHeight * lines.length;
     let y = (size - totalTextHeight) / 2 + lineHeight / 2;
     
@@ -341,28 +376,47 @@ function generateTextImage(text, resolution, fontFamily, alignment) {
         
         // Split text into lines
         const lines = text.split('\n');
+        const fontSizeScale = parseInt(fontSizeSlider.value) / 100;
         
-        // Calculate font size
-        let fontSize = resolution / 4;
-        ctx.font = `bold ${fontSize}px "${fontFamily}"`;
+        // Calculate base font size based on resolution and number of lines
+        const lineCount = lines.length;
+        let baseFontSize = resolution / 4;
         
-        // Measure and adjust font size to fit all lines
+        // Adjust base size for multiple lines to prevent excessive shrinking
+        if (lineCount > 1) {
+            baseFontSize = Math.min(resolution / 4, resolution / (lineCount * 0.8));
+        }
+        
+        // First, calculate what the fitted font size would be at 100%
+        let fittedFontSize = baseFontSize;
+        ctx.font = `bold ${fittedFontSize}px "${fontFamily}"`;
+        
+        // Measure and adjust to fit
         let maxWidth = 0;
         for (const line of lines) {
             const metrics = ctx.measureText(line);
             if (metrics.width > maxWidth) maxWidth = metrics.width;
         }
         
-        const totalHeight = fontSize * lines.length * 1.2;
-        while ((maxWidth > resolution * 0.9 || totalHeight > resolution * 0.9) && fontSize > 10) {
-            fontSize -= 5;
-            ctx.font = `bold ${fontSize}px "${fontFamily}"`;
+        let lineHeight = fittedFontSize * 1.2;
+        let totalHeight = lineHeight * lines.length;
+        
+        while ((maxWidth > resolution * 0.9 || totalHeight > resolution * 0.9) && fittedFontSize > 10) {
+            fittedFontSize -= 5;
+            ctx.font = `bold ${fittedFontSize}px "${fontFamily}"`;
             maxWidth = 0;
             for (const line of lines) {
                 const metrics = ctx.measureText(line);
                 if (metrics.width > maxWidth) maxWidth = metrics.width;
             }
+            lineHeight = fittedFontSize * 1.2;
+            totalHeight = lineHeight * lines.length;
         }
+        
+        // Now apply the scale to the fitted size
+        const fontSize = fittedFontSize * fontSizeScale;
+        ctx.font = `bold ${fontSize}px "${fontFamily}"`;
+        lineHeight = fontSize * 1.2;
         
         // Set text properties
         ctx.fillStyle = '#FFFFFF';
@@ -382,7 +436,6 @@ function generateTextImage(text, resolution, fontFamily, alignment) {
         }
         
         // Draw each line
-        const lineHeight = fontSize * 1.2;
         const totalTextHeight = lineHeight * lines.length;
         let y = (resolution - totalTextHeight) / 2 + lineHeight / 2;
         

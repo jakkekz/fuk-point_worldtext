@@ -25,7 +25,7 @@
                     <div class="step-number">1</div>
                     <div class="step-text">
                         <strong>Configure settings</strong>
-                        <p>Choose shader type, enter your text or LJ number range, select font and alignment</p>
+                        <p></p>
                     </div>
                 </div>
                 <div class="step">
@@ -61,6 +61,7 @@
 
         <!-- Middle: Form -->
         <div class="form-panel">
+            <h2>Settings</h2>
             <div class="form-content">
 
         <div class="form-section">
@@ -111,6 +112,11 @@
         </div>
 
         <div class="form-section">
+            <label for="font-size-slider">Font Size: <span id="font-size-value">100</span>%</label>
+            <input type="range" id="font-size-slider" min="0" max="200" value="100" step="5">
+        </div>
+
+        <div class="form-section">
             <label for="font-upload">Upload Custom Font (optional):</label>
             <div class="upload-section">
                 <input type="file" id="font-upload" accept=".ttf,.otf,.woff,.woff2" multiple>
@@ -155,6 +161,7 @@
 
         <!-- Right Side: Preview & Generate -->
         <div class="preview-panel">
+            <h2>Preview & Download</h2>
             <div class="form-section">
                 <label>Preview:</label>
                 <div class="preview-container">
@@ -165,7 +172,7 @@
             <div class="form-section">
                 <label for="folder-name">Output Folder Name:</label>
                 <input type="text" id="folder-name" value="fuckpointworldtext" placeholder="Folder name in materials/">
-                <small>Files will be in materials/[folder name]/</small>
+                <small>Files shall be placed in materials/[folder name]/</small>
             </div>
 
             <div class="button-group">

@@ -108,7 +108,9 @@ h1 {
     font-size: 14px;
 }
 
-.tutorial-panel h2 {
+.tutorial-panel h2,
+.form-panel h2,
+.preview-panel h2 {
     color: #ff79c6;
     font-size: 20px;
     margin-bottom: 20px;
