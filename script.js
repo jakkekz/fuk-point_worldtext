@@ -219,47 +219,11 @@ function updatePreview() {
     // Get font and alignment
     const fontFamily = fontSelect.value;
     const alignment = alignmentSelect.value;
-    const fontSizeScale = parseInt(fontSizeSlider.value) / 100;
     
-    // Calculate base font size based on canvas size and number of lines
-    const lineCount = lines.length;
-    let baseFontSize = size / 4;
-    
-    // Adjust base size for multiple lines to prevent excessive shrinking
-    if (lineCount > 1) {
-        baseFontSize = Math.min(size / 4, size / (lineCount * 0.8));
-    }
-    
-    // First, calculate what the fitted font size would be at 100%
-    let fittedFontSize = baseFontSize;
-    ctx.font = `bold ${fittedFontSize}px "${fontFamily}"`;
-    
-    // Measure and adjust to fit
-    let maxWidth = 0;
-    for (const line of lines) {
-        const metrics = ctx.measureText(line);
-        if (metrics.width > maxWidth) maxWidth = metrics.width;
-    }
-    
-    let lineHeight = fittedFontSize * 1.2;
-    let totalHeight = lineHeight * lines.length;
-    
-    while ((maxWidth > size * 0.9 || totalHeight > size * 0.9) && fittedFontSize > 10) {
-        fittedFontSize -= 2;
-        ctx.font = `bold ${fittedFontSize}px "${fontFamily}"`;
-        maxWidth = 0;
-        for (const line of lines) {
-            const metrics = ctx.measureText(line);
-            if (metrics.width > maxWidth) maxWidth = metrics.width;
-        }
-        lineHeight = fittedFontSize * 1.2;
-        totalHeight = lineHeight * lines.length;
-    }
-    
-    // Now apply the scale to the fitted size
-    const fontSize = fittedFontSize * fontSizeScale;
+    // Use slider value directly as font size in pixels
+    const fontSize = parseInt(fontSizeSlider.value);
     ctx.font = `bold ${fontSize}px "${fontFamily}"`;
-    lineHeight = fontSize * 1.2;
+    const lineHeight = fontSize * 1.2;
     
     // Set text properties
     ctx.fillStyle = '#FFFFFF';
@@ -521,47 +485,11 @@ function generateTextImageFromQueue(text, queueItem) {
         
         // Split text into lines
         const lines = text.split('\n');
-        const fontSizeScale = queueItem.fontSizeScale / 100;
         
-        // Calculate base font size based on resolution and number of lines
-        const lineCount = lines.length;
-        let baseFontSize = queueItem.resolution / 4;
-        
-        // Adjust base size for multiple lines to prevent excessive shrinking
-        if (lineCount > 1) {
-            baseFontSize = Math.min(queueItem.resolution / 4, queueItem.resolution / (lineCount * 0.8));
-        }
-        
-        // First, calculate what the fitted font size would be at 100%
-        let fittedFontSize = baseFontSize;
-        ctx.font = `bold ${fittedFontSize}px "${queueItem.fontFamily}"`;
-        
-        // Measure and adjust to fit
-        let maxWidth = 0;
-        for (const line of lines) {
-            const metrics = ctx.measureText(line);
-            if (metrics.width > maxWidth) maxWidth = metrics.width;
-        }
-        
-        let lineHeight = fittedFontSize * 1.2;
-        let totalHeight = lineHeight * lines.length;
-        
-        while ((maxWidth > queueItem.resolution * 0.9 || totalHeight > queueItem.resolution * 0.9) && fittedFontSize > 10) {
-            fittedFontSize -= 5;
-            ctx.font = `bold ${fittedFontSize}px "${queueItem.fontFamily}"`;
-            maxWidth = 0;
-            for (const line of lines) {
-                const metrics = ctx.measureText(line);
-                if (metrics.width > maxWidth) maxWidth = metrics.width;
-            }
-            lineHeight = fittedFontSize * 1.2;
-            totalHeight = lineHeight * lines.length;
-        }
-        
-        // Now apply the scale to the fitted size
-        const fontSize = fittedFontSize * fontSizeScale;
+        // Use font size value directly from queue item (in pixels)
+        const fontSize = queueItem.fontSizeScale;
         ctx.font = `bold ${fontSize}px "${queueItem.fontFamily}"`;
-        lineHeight = fontSize * 1.2;
+        const lineHeight = fontSize * 1.2;
         
         // Set text properties
         ctx.fillStyle = '#FFFFFF';
@@ -678,47 +606,11 @@ function generateTextImage(text, resolution, fontFamily, alignment) {
         
         // Split text into lines
         const lines = text.split('\n');
-        const fontSizeScale = parseInt(fontSizeSlider.value) / 100;
         
-        // Calculate base font size based on resolution and number of lines
-        const lineCount = lines.length;
-        let baseFontSize = resolution / 4;
-        
-        // Adjust base size for multiple lines to prevent excessive shrinking
-        if (lineCount > 1) {
-            baseFontSize = Math.min(resolution / 4, resolution / (lineCount * 0.8));
-        }
-        
-        // First, calculate what the fitted font size would be at 100%
-        let fittedFontSize = baseFontSize;
-        ctx.font = `bold ${fittedFontSize}px "${fontFamily}"`;
-        
-        // Measure and adjust to fit
-        let maxWidth = 0;
-        for (const line of lines) {
-            const metrics = ctx.measureText(line);
-            if (metrics.width > maxWidth) maxWidth = metrics.width;
-        }
-        
-        let lineHeight = fittedFontSize * 1.2;
-        let totalHeight = lineHeight * lines.length;
-        
-        while ((maxWidth > resolution * 0.9 || totalHeight > resolution * 0.9) && fittedFontSize > 10) {
-            fittedFontSize -= 5;
-            ctx.font = `bold ${fittedFontSize}px "${fontFamily}"`;
-            maxWidth = 0;
-            for (const line of lines) {
-                const metrics = ctx.measureText(line);
-                if (metrics.width > maxWidth) maxWidth = metrics.width;
-            }
-            lineHeight = fittedFontSize * 1.2;
-            totalHeight = lineHeight * lines.length;
-        }
-        
-        // Now apply the scale to the fitted size
-        const fontSize = fittedFontSize * fontSizeScale;
+        // Use slider value directly as font size in pixels
+        const fontSize = parseInt(fontSizeSlider.value);
         ctx.font = `bold ${fontSize}px "${fontFamily}"`;
-        lineHeight = fontSize * 1.2;
+        const lineHeight = fontSize * 1.2;
         
         // Set text properties
         ctx.fillStyle = '#FFFFFF';
