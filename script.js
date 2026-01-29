@@ -421,6 +421,9 @@ async function generateQueueFiles() {
     
     let processedItems = 0;
     
+    // Track used filenames to handle duplicates
+    const usedFilenames = new Map(); // filename -> count
+    
     // Process each queue item
     for (const queueItem of queue) {
         const materialsFolder = zip.folder(`materials/${queueItem.folderName}`);
@@ -436,7 +439,16 @@ async function generateQueueFiles() {
         
         // Generate each text
         for (const text of textsToGenerate) {
-            const filename = sanitizeFilename(text);
+            let filename = sanitizeFilename(text);
+            
+            // Handle duplicate filenames
+            if (usedFilenames.has(filename)) {
+                const count = usedFilenames.get(filename) + 1;
+                usedFilenames.set(filename, count);
+                filename = `${filename}${count}`;
+            } else {
+                usedFilenames.set(filename, 1);
+            }
             
             // Update progress
             processedItems++;
@@ -556,10 +568,22 @@ async function generateFiles() {
     // Create folder in ZIP
     const materialsFolder = zip.folder(`materials/${folderName}`);
     
+    // Track used filenames to handle duplicates
+    const usedFilenames = new Map(); // filename -> count
+    
     // Generate each text
     for (let i = 0; i < textsToGenerate.length; i++) {
         const text = textsToGenerate[i];
-        const filename = sanitizeFilename(text);
+        let filename = sanitizeFilename(text);
+        
+        // Handle duplicate filenames
+        if (usedFilenames.has(filename)) {
+            const count = usedFilenames.get(filename) + 1;
+            usedFilenames.set(filename, count);
+            filename = `${filename}${count}`;
+        } else {
+            usedFilenames.set(filename, 1);
+        }
         
         // Update progress
         const progress = ((i + 1) / totalItems) * 100;
