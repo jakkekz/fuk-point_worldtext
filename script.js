@@ -49,6 +49,7 @@ minNumberInput.addEventListener('input', updatePreview);
 maxNumberInput.addEventListener('input', updatePreview);
 alignmentSelect.addEventListener('change', updatePreview);
 fontSelect.addEventListener('change', updatePreview);
+resolutionSelect.addEventListener('change', updatePreview);
 fontSizeSlider.addEventListener('input', () => {
     fontSizeValue.textContent = fontSizeSlider.value;
     updatePreview();
@@ -220,8 +221,10 @@ function updatePreview() {
     const fontFamily = fontSelect.value;
     const alignment = alignmentSelect.value;
     
-    // Use slider value directly as font size in pixels
-    const fontSize = parseInt(fontSizeSlider.value);
+    // Scale font size proportionally for preview based on selected resolution
+    const selectedResolution = parseInt(resolutionSelect.value);
+    const previewScale = size / selectedResolution;
+    const fontSize = parseInt(fontSizeSlider.value) * previewScale;
     ctx.font = `bold ${fontSize}px "${fontFamily}"`;
     const lineHeight = fontSize * 1.2;
     
