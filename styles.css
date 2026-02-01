@@ -25,11 +25,11 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: #282a36;
     min-height: 100vh;
-    overflow: hidden;
+    overflow: auto;
     color: #f8f8f2;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     padding: 0;
     margin: 0;
 }
@@ -38,7 +38,7 @@ body {
     display: flex;
     flex-direction: column;
     width: 1120px;
-    height: 100vh;
+    height: auto;
 }
 
 .header-section {
@@ -56,9 +56,11 @@ body {
 .main-wrapper {
     display: grid;
     grid-template-columns: 350px 420px 350px;
-    flex: 1;
+    flex: none;
     gap: 0;
     overflow: hidden;
+    border-left: 2px solid #44475a;
+    border-right: 2px solid #44475a;
 }
 
 .tutorial-panel {
@@ -145,6 +147,39 @@ textarea {
     color: #f8f8f2;
 }
 
+input[type="color"] {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 2px solid #44475a;
+    border-radius: 6px;
+    background: #21222c;
+    cursor: pointer;
+}
+
+input[type="color"]:focus {
+    outline: none;
+    border-color: #bd93f9;
+}
+
+.color-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.color-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.color-label {
+    font-size: 12px;
+    color: #6272a4;
+}
+
 input[type="text"]:focus,
 input[type="number"]:focus,
 select:focus,
@@ -179,7 +214,24 @@ textarea {
     font-size: 14px;
 }
 
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: normal;
+    cursor: pointer;
+    color: #f8f8f2;
+    font-size: 14px;
+}
+
 .radio-label input[type="radio"] {
+    width: auto;
+    cursor: pointer;
+    accent-color: #ff79c6;
+    transform: scale(1.2);
+}
+
+.checkbox-label input[type="checkbox"] {
     width: auto;
     cursor: pointer;
     accent-color: #ff79c6;
@@ -212,11 +264,68 @@ textarea {
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: zoom-in;
 }
 
 #preview-canvas {
-    max-width: 100%;
-    max-height: 100%;
+    width: 100%;
+    height: 100%;
+    image-rendering: auto;
+}
+
+.preview-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 24px;
+}
+
+.preview-modal.is-open {
+    display: flex;
+}
+
+.preview-modal-content {
+    position: relative;
+    background: #1b1c25;
+    border: 2px solid #44475a;
+    border-radius: 10px;
+    padding: 16px;
+    max-width: min(90vw, 900px);
+    max-height: min(90vh, 900px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.preview-modal-content img {
+    width: min(900px, 90vw);
+    height: min(900px, 90vh);
+    object-fit: contain;
+    image-rendering: pixelated;
+}
+
+.preview-modal-close {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    border: none;
+    background: #44475a;
+    color: #f8f8f2;
+    font-size: 20px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    line-height: 32px;
+}
+
+.preview-modal-close:hover {
+    background: #ff79c6;
+    color: #282a36;
 }
 
 .button-group {
@@ -565,13 +674,49 @@ input[type="file"]::file-selector-button:hover {
 @media (max-width: 1024px) {
     .main-wrapper {
         grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr;
-        overflow-y: auto;
+        grid-template-rows: auto auto auto;
+        overflow: visible;
     }
     
     .tutorial-panel {
         border-right: none;
         border-bottom: 2px solid #44475a;
+    }
+
+    .form-panel {
+        border-right: none;
+        border-bottom: 2px solid #44475a;
+    }
+
+    .preview-panel {
+        border-right: none;
+    }
+
+    .tutorial-panel,
+    .form-panel,
+    .preview-panel {
+        overflow: visible;
+    }
+
+    .page-wrapper {
+        width: 100%;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea,
+    input[type="file"] {
+        width: 100%;
+    }
+
+    .inline-group input {
+        width: 100%;
+        flex: 1;
+    }
+
+    .preview-container {
+        height: 240px;
     }
     
     body {

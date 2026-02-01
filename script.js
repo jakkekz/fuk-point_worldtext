@@ -14,8 +14,18 @@ const alignmentSelect = document.getElementById('alignment');
 const fontSelect = document.getElementById('font-select');
 const fontSizeSlider = document.getElementById('font-size-slider');
 const fontSizeValue = document.getElementById('font-size-value');
+const textColorInput = document.getElementById('text-color');
+const outlineToggle = document.getElementById('outline-toggle');
+const outlineColorInput = document.getElementById('outline-color');
+const outlineColorItem = document.getElementById('outline-color-item');
+const outlineThicknessSection = document.getElementById('outline-thickness-section');
+const outlineThicknessSlider = document.getElementById('outline-thickness');
+const outlineThicknessValue = document.getElementById('outline-thickness-value');
 const resolutionSelect = document.getElementById('resolution');
 const previewCanvas = document.getElementById('preview-canvas');
+const previewModal = document.getElementById('preview-modal');
+const previewModalImage = document.getElementById('preview-modal-image');
+const previewModalClose = document.getElementById('preview-modal-close');
 const generateBtn = document.getElementById('generate-btn');
 const addToQueueBtn = document.getElementById('add-to-queue-btn');
 const clearQueueBtn = document.getElementById('clear-queue-btn');
@@ -54,16 +64,56 @@ fontSizeSlider.addEventListener('input', () => {
     fontSizeValue.textContent = fontSizeSlider.value;
     updatePreview();
 });
+textColorInput.addEventListener('input', updatePreview);
+outlineColorInput.addEventListener('input', updatePreview);
+outlineToggle.addEventListener('change', () => {
+    updateOutlineVisibility();
+    updatePreview();
+});
+outlineThicknessSlider.addEventListener('input', () => {
+    outlineThicknessValue.textContent = outlineThicknessSlider.value;
+    updatePreview();
+});
 fontUploadInput.addEventListener('change', handleFontUpload);
 generateBtn.addEventListener('click', generateAndDownload);
 addToQueueBtn.addEventListener('click', addToQueue);
 clearQueueBtn.addEventListener('click', clearQueue);
 downloadQueueBtn.addEventListener('click', downloadQueue);
+previewCanvas.addEventListener('click', openPreviewModal);
+previewModalClose.addEventListener('click', closePreviewModal);
+previewModal.addEventListener('click', (event) => {
+    if (event.target === previewModal) {
+        closePreviewModal();
+    }
+});
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+        closePreviewModal();
+    }
+});
 
 // Initialize
 updateContentTypeVisibility();
 updateFontTypeVisibility();
+updateOutlineVisibility();
 updatePreview();
+
+function openPreviewModal() {
+    previewModal.classList.add('is-open');
+    previewModal.setAttribute('aria-hidden', 'false');
+    previewModalImage.src = previewCanvas.toDataURL('image/png');
+}
+
+function closePreviewModal() {
+    previewModal.classList.remove('is-open');
+    previewModal.setAttribute('aria-hidden', 'true');
+}
+
+function updateOutlineVisibility() {
+    const show = outlineToggle.checked;
+    outlineColorItem.style.display = show ? 'flex' : 'none';
+    outlineThicknessSection.style.display = show ? 'block' : 'none';
+}
 
 function updateContentTypeVisibility() {
     const selectedType = document.querySelector('input[name="content-type"]:checked').value;
@@ -191,7 +241,7 @@ function removeFontUpload(fontName) {
 function updatePreview() {
     const canvas = previewCanvas;
     const ctx = canvas.getContext('2d');
-    const size = 300;
+    const size = parseInt(resolutionSelect.value);
     canvas.width = size;
     canvas.height = size;
     
@@ -221,16 +271,21 @@ function updatePreview() {
     const fontFamily = fontSelect.value;
     const alignment = alignmentSelect.value;
     
-    // Scale font size proportionally for preview based on selected resolution
-    const selectedResolution = parseInt(resolutionSelect.value);
-    const previewScale = size / selectedResolution;
-    const fontSize = parseInt(fontSizeSlider.value) * previewScale;
+    // Use actual resolution for preview quality
+    const fontSize = parseInt(fontSizeSlider.value);
     ctx.font = `bold ${fontSize}px "${fontFamily}"`;
     const lineHeight = fontSize * 1.2;
     
     // Set text properties
-    ctx.fillStyle = '#FFFFFF';
+    ctx.fillStyle = textColorInput.value;
     ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round';
+    const outlineEnabled = outlineToggle.checked;
+    const outlineWidth = outlineEnabled ? parseInt(outlineThicknessSlider.value) : 0;
+    if (outlineEnabled) {
+        ctx.strokeStyle = outlineColorInput.value;
+        ctx.lineWidth = outlineWidth;
+    }
     
     // Set alignment
     let x;
@@ -250,8 +305,15 @@ function updatePreview() {
     let y = (size - totalTextHeight) / 2 + lineHeight / 2;
     
     for (const line of lines) {
+        if (outlineEnabled) {
+            ctx.strokeText(line, x, y);
+        }
         ctx.fillText(line, x, y);
         y += lineHeight;
+    }
+
+    if (previewModal.classList.contains('is-open')) {
+        previewModalImage.src = canvas.toDataURL('image/png');
     }
 }
 
@@ -326,6 +388,10 @@ function addToQueue() {
         fontFamily: fontSelect.value,
         alignment: alignmentSelect.value,
         fontSizeScale: parseInt(fontSizeSlider.value),
+        textColor: textColorInput.value,
+        outlineEnabled: outlineToggle.checked,
+        outlineColor: outlineColorInput.value,
+        outlineThickness: parseInt(outlineThicknessSlider.value),
         folderName: 'fuckpointworldtext'
     };
     
@@ -507,8 +573,15 @@ function generateTextImageFromQueue(text, queueItem) {
         const lineHeight = fontSize * 1.2;
         
         // Set text properties
-        ctx.fillStyle = '#FFFFFF';
+        ctx.fillStyle = queueItem.textColor || '#FFFFFF';
         ctx.textBaseline = 'middle';
+        ctx.lineJoin = 'round';
+        const outlineEnabled = Boolean(queueItem.outlineEnabled);
+        const outlineWidth = outlineEnabled ? (queueItem.outlineThickness || 6) : 0;
+        if (outlineEnabled) {
+            ctx.strokeStyle = queueItem.outlineColor || '#000000';
+            ctx.lineWidth = outlineWidth;
+        }
         
         // Set alignment
         let x;
@@ -528,6 +601,9 @@ function generateTextImageFromQueue(text, queueItem) {
         let y = (queueItem.resolution - totalTextHeight) / 2 + lineHeight / 2;
         
         for (const line of lines) {
+            if (outlineEnabled) {
+                ctx.strokeText(line, x, y);
+            }
             ctx.fillText(line, x, y);
             y += lineHeight;
         }
@@ -640,8 +716,15 @@ function generateTextImage(text, resolution, fontFamily, alignment) {
         const lineHeight = fontSize * 1.2;
         
         // Set text properties
-        ctx.fillStyle = '#FFFFFF';
+        ctx.fillStyle = textColorInput.value;
         ctx.textBaseline = 'middle';
+        ctx.lineJoin = 'round';
+        const outlineEnabled = outlineToggle.checked;
+        const outlineWidth = outlineEnabled ? parseInt(outlineThicknessSlider.value) : 0;
+        if (outlineEnabled) {
+            ctx.strokeStyle = outlineColorInput.value;
+            ctx.lineWidth = outlineWidth;
+        }
         
         // Set alignment
         let x;
@@ -661,6 +744,9 @@ function generateTextImage(text, resolution, fontFamily, alignment) {
         let y = (resolution - totalTextHeight) / 2 + lineHeight / 2;
         
         for (const line of lines) {
+            if (outlineEnabled) {
+                ctx.strokeText(line, x, y);
+            }
             ctx.fillText(line, x, y);
             y += lineHeight;
         }

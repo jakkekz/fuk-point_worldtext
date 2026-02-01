@@ -132,8 +132,34 @@
         </div>
 
         <div class="form-section">
-            <label for="font-size-slider">Font Size: <span id="font-size-value">45</span>px</label>
-            <input type="range" id="font-size-slider" min="10" max="500" value="45" step="5">
+            <label for="font-size-slider">Font Size: <span id="font-size-value">160</span>px</label>
+            <input type="range" id="font-size-slider" min="10" max="500" value="160" step="5">
+        </div>
+
+        <div class="form-section">
+            <label>Colors:</label>
+            <div class="color-row">
+                <div class="color-item">
+                    <span class="color-label">Text</span>
+                    <input type="color" id="text-color" value="#ffffff">
+                </div>
+                <div id="outline-color-item" class="color-item" style="display: none;">
+                    <span class="color-label">Outline</span>
+                    <input type="color" id="outline-color" value="#000000">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <label class="checkbox-label">
+                <input type="checkbox" id="outline-toggle">
+                Outline
+            </label>
+        </div>
+
+        <div id="outline-thickness-section" class="form-section" style="display: none;">
+            <label for="outline-thickness">Outline Thickness: <span id="outline-thickness-value">6</span>px</label>
+            <input type="range" id="outline-thickness" min="1" max="40" value="6" step="1">
         </div>
 
         <div class="form-section">
@@ -198,6 +224,14 @@
             </div>
         </div>
     </div>
+    <div class="separator-line"></div>
+    </div>
+
+    <div id="preview-modal" class="preview-modal" aria-hidden="true">
+        <div class="preview-modal-content" role="dialog" aria-modal="true" aria-label="Preview image">
+            <button id="preview-modal-close" class="preview-modal-close" aria-label="Close preview">×</button>
+            <img id="preview-modal-image" alt="Preview" />
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
